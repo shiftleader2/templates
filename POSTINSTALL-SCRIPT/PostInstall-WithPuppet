@@ -1,0 +1,23 @@
+{% extends 'PostInstall-Generic' %}
+
+{% block extra %}
+# Install and configure puppet
+# Install puppet agent, and configure it
+# Adding the puppet repositories
+distro=$(lsb_release -c -s)
+echo "Enabling the puppet repositories" >> $logfile
+wget https://apt.puppet.com/puppet7-release-${distro}.deb
+dpkg -i puppet7-release-${distro}.deb
+# Install puppet
+echo "Installing puppet" >> $logfile
+apt-get update
+apt-get -y install puppet-agent
+# Configure the new puppet agent
+echo "Configuring puppet" >> $logfile
+echo "[agent]" >> /etc/puppetlabs/puppet/puppet.conf
+echo "server = {{ server.puppetserver }}" >> /etc/puppetlabs/puppet/puppet.conf 
+echo "ca_server = {{ server.puppetcaserver }}" >> /etc/puppetlabs/puppet/puppet.conf 
+export PATH="$PATH:/opt/puppetlabs/bin"
+systemctl enable  puppet
+echo "Puppet installation is finished" >> $logfile
+{% endblock %}

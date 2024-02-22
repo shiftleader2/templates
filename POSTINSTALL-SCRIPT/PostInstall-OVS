@@ -1,0 +1,5 @@
+{% extends 'PostInstall-Generic' %}
+
+{% block extra %}
+{% include 'ovs-bootstrap.sh' %}
+{% endblock %}

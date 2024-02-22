@@ -1,0 +1,152 @@
+#cloud-config
+autoinstall:
+  version: 1
+  late-commands:
+   - curtin in-target --target=/target -- wget "{{ api }}{{server.config.postinstall}}"
+   - curtin in-target --target=/target -- chmod +x ./postinstall
+   - curtin in-target --target=/target -- chroot ./ ./postinstall
+  user-data:
+    disable_root: false
+    hostname: {{ server.hostname }}
+    users:
+      - name: root
+        lock_passwd: false
+        hashed_passwd: {{ server.password.sha512 }} 
+        shell: /bin/bash
+    {%- block puppet %}
+    puppet:
+      install: true
+      install_type: "aio"
+      cleanup: false
+      collection: "puppet7"
+      conf:
+        agent:
+          server: {{ server.puppetserver  }} 
+          ca_server: {{ server.puppetcaserver }} 
+    {%- endblock puppet %}
+  network:
+    version: 2
+    renderer: networkd
+    ethernets:
+    {%- for interface in server.interfaces %}
+     {%- if 'rac' not in interface %}
+      {{ interface }}:
+       {%- if server.interfaces[interface].primary %}
+        dhcp4: true
+       {%- else %}
+        dhcp4: false
+        accept-ra: false
+       {%- endif %}
+     {%- endif %}
+    {%- endfor %}
+  {%- block storage %}
+  storage:
+    config:
+      {%- block primarypartitions %}
+      # Install on the smallest disk; as we typically utilize larger disks for
+      # any real data in our infrastructure :P
+      - type: disk
+        match:
+          size: smallest
+        id: rootdisk
+        ptable: gpt
+        wipe: superblock
+        preserve: false
+        grub_device: true
+
+      # Add a partition for GRUB
+      - type: partition
+        id: grub-partition
+        device: rootdisk
+        size: 1M
+        flag: bios_grub
+        partition_type: EF02
+        wipe: superblock
+        preserve: false
+
+      # Add a partition for /Boot
+      - type: partition
+        id: boot-partition
+        device: rootdisk
+        size: 2G
+      {%- endblock primarypartitions %}
+
+      - type: format
+        id: boot-format
+        volume: boot-partition
+        fstype: ext4
+        label: BOOT
+      - type: mount
+        id: boot-mount 
+        device: boot-format
+        path: /boot
+
+      {%- block lvmpartition %}
+      # Use the rest of the disk for LVM.
+      - type: partition
+        id: lvm-partition
+        device: rootdisk
+        size: -1
+      - type: lvm_volgroup
+        preserve: false
+        name: bootdisk
+        id: vg-bootdisk
+        devices:
+         - lvm-partition
+      {%- endblock lvmpartition %}
+
+      # Add parition for /  
+      - type: lvm_partition
+        id: lv-root
+        name: rootfs
+        preserve: false
+        volgroup: vg-bootdisk
+        wipe: superblock
+        size: 10G
+      - type: format
+        id: root-format
+        volume: lv-root
+        fstype: ext4 
+        label: ROOT
+      - type: mount 
+        id: root-mount 
+        device: root-format
+        path: /
+
+      # Add LVM-parittion for /var
+      - type: lvm_partition
+        id: lv-var
+        name: varfs
+        preserve: false
+        volgroup: vg-bootdisk
+        wipe: superblock
+        size: 5G
+      - type: format
+        id: var-format
+        volume: lv-var
+        fstype: ext4 
+        label: VAR
+      - type: mount
+        id: var-mount 
+        device: var-format
+        path: /var
+
+      {%- block swap %}
+      # Add LVM-partition for swap
+      - type: lvm_partition
+        id: lv-swap
+        name: swap
+        preserve: false
+        volgroup: vg-bootdisk
+        wipe: superblock
+        size: 2G
+      - type: format
+        id: swap-format
+        volume: lv-swap
+        fstype: swap 
+      - type: mount
+        id: swap-mount 
+        device: swap-format
+        path: none
+      {%- endblock swap %}
+  {%- endblock storage %}

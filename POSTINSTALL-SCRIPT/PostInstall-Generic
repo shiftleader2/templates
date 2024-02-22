@@ -1,0 +1,31 @@
+#!/bin/bash
+logfile='/root/postinstall.log'
+echo "Post install started on $(date)" > $logfile
+
+echo "Inserting hostname" >> $logfile
+echo "127.0.0.1 {{server.fqdn}} {{server.hostname}}" > /etc/hosts
+
+# OS-Configuration
+# Allow password-based root-login
+echo "Permitting root login" >> $logfile
+sed -i 's/^#PermitRootLogin\ .*$/PermitRootLogin\ Yes/' /etc/ssh/sshd_config
+systemctl restart sshd
+
+# Install updates
+echo "Installing updates" >> $logfile
+apt-get update
+apt-get -y upgrade
+
+# Enable ICMP redirects
+echo "Enable icmp redirects" >> $logfile
+echo "net.ipv4.conf.all.accept_redirects=1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.all.accept_redirects=1" >> /etc/sysctl.conf
+sysctl -p
+
+{% block extra %}
+{% endblock %}
+
+# Post-installation script is finished.
+echo "Post install completed on $(date)" >> $logfile 
+wget {{api}}{{server.config.complete}} -O - &> /dev/null
+exit 0

@@ -1,0 +1,5 @@
+DEFAULT install
+LABEL install
+  KERNEL {{ server.os.shortname }}/{{ server.os.kernel }} 
+  INITRD {{ server.os.shortname }}/{{ server.os.initrd }}
+  APPEND ip=dhcp cloud-config-url={{ api }}{{ server.config.installconf }} url=http://rpm.iik.ntnu.no/jammy/jammy-live-server-amd64.iso autoinstall ds="nocloud-net;s={{ api }}/server/{{ server.id }}/installer/" ---

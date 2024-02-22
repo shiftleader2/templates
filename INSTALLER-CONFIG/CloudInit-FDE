@@ -1,0 +1,20 @@
+{% extends 'CloudInit-Minimal' %}
+
+{% block lvmpartition %}
+      # Use the rest of the disk for LVM.
+      - type: partition
+        id: lvm-partition
+        device: rootdisk
+        size: -1
+      - type: dm_crypt
+        id: lvm-encrypted
+        volume: lvm-partition
+        dm_name: bootdisk
+        key: {{ server.hostname }}
+      - type: lvm_volgroup
+        preserve: false
+        name: bootdisk
+        id: vg-bootdisk
+        devices:
+         - lvm-encrypted
+{% endblock lvmpartition %}

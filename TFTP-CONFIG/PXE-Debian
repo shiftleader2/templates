@@ -1,0 +1,4 @@
+DEFAULT install
+LABEL install
+  KERNEL {{ server.os.shortname }}/{{ server.os.kernel }}
+  APPEND auto initrd={{ server.os.shortname }}/{{ server.os.initrd }} url={{ api }}{{ server.config.installconf }} locale=en_US keyboard-configuration/layoutcode=no hostname={{ server.hostname }} interface={{ server.primary_interface.name }} -- quiet 

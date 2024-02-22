@@ -1,0 +1,4 @@
+{% extends 'CloudInit-Minimal' %}
+
+{% block puppet %}
+{% endblock puppet %}

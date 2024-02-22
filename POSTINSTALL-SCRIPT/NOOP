@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Write something to a logfile so that we can see the script actually ran.
+echo "NOOP PostInstall" > /root/postinstall.log
+
+# Call the ShiftLeader2-Hook to signal that installation is complete.
+wget {{api}}{{server.config.complete}} -O - &> /dev/null

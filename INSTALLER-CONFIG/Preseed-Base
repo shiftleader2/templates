@@ -1,0 +1,118 @@
+# Include generic settings
+# Set up english language; but norwegian location
+d-i debian-installer/language string en
+d-i debian-installer/country string NO
+d-i debian-installer/locale string en_GB.UTF-8
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/xkb-keymap select no
+
+# Install from the first interface
+d-i netcfg/choose_interface select auto
+
+# Hostnames are assigned by dhcp
+d-i netcfg/get_hostname string unassigned-hostname
+d-i netcfg/get_domain string unassigned-domain
+
+# Disable that annoying WEP key dialog.
+d-i netcfg/wireless_wep string
+
+# We create only a root-user at install, and allows it to login.
+d-i passwd/root-login boolean true
+d-i passwd/make-user boolean false
+d-i user-setup/encrypt-home boolean false
+# Root password
+d-i passwd/root-password-crypted password {{ server.password.sha512 }}
+
+# Set timezone
+d-i clock-setup/utc boolean true
+d-i time/zone string UTC 
+d-i clock-setup/ntp boolean true
+
+# Define the base-system, and install updates
+tasksel tasksel/first multiselect standard
+d-i pkgsel/include string openssh-server build-essential
+d-i pkgsel/upgrade select full-upgrade
+d-i pkgsel/update-policy select unattended-upgrades
+
+# Install grup on the first disk; regardless of what other os's are found
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+d-i grub-installer/bootdev  string default
+
+# Add kernel parameters
+d-i debian-installer/add-kernel-opts string nomodeset
+
+# Remove the "installation is finished" message
+d-i finish-install/reboot_in_progress note
+
+# Run the postinstall script
+d-i preseed/late_command string \
+    cd /target; \
+    wget {{ api }}{{ server.config.postinstall }} -O postinstall.sh; \
+    chmod +x ./postinstall.sh; \
+    chroot ./ ./postinstall.sh
+# Configure default mirror-settings
+# Install non-free firmware if needed
+d-i hw-detect/load_firmware boolean true
+# Choose mirror
+d-i mirror/country string no
+d-i mirror/http/hostname string archive.ubuntu.com
+d-i mirror/http/directory string /ubuntu
+d-i mirror/http/mirror select no.archive.ubuntu.com
+# We do not use proxy
+d-i mirror/http/proxy string
+
+# Allow installing from restricted, universe and backports
+d-i apt-setup/restricted boolean true
+d-i apt-setup/universe boolean true
+d-i apt-setup/backports boolean true
+# Install security-updates
+d-i apt-setup/services-select multiselect security
+d-i apt-setup/security_host string security.ubuntu.com
+d-i apt-setup/security_path string /ubuntu
+
+{% block partitioner %}
+# Include the default partition-scheme
+# Select the first disk
+d-i partman/early_command string debconf-set partman-auto/disk "$(list-devices disk | head -n1)"
+# Partition it using LVM
+d-i partman-auto/method string lvm
+# Allow overwriting existing lvm and md partitions
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+# Accept writing the LVM config to disk
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+
+d-i partman-auto-lvm/guided_size string max
+d-i partman/alignment                               select optimal
+
+# Create 2G /boot primary and LVM with 6-20G /, 1-40G swap and 6-40G /var
+d-i partman-auto/expert_recipe string                         \
+      boot-root ::                                            \
+              2048 2048 2048 ext3                             \
+                      $primary{ } $bootable{ }                \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      mountpoint{ /boot }                     \
+              .                                               \
+              1024 10000 40960 linux-swap                     \
+                      method{ swap } format{ } $lvmok{ }      \
+                      lv_name{ swap }                         \
+              .                                               \
+              6144 20000 20480 ext3                           \
+                      method{ format } format{ } $lvmok{ }    \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      mountpoint{ / }                         \
+              .                                               \
+              6144 20000 40960 ext3                           \
+                      method{ format } format{ } $lvmok{ }    \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      mountpoint{ /var }                      \
+              .                                               
+
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+{% endblock %}
