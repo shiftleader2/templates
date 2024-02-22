@@ -1,16 +1,6 @@
 {% extends 'CloudInit-Minimal' %}
 
-{% block primarypartitions %}
-      # Install on the smallest disk; as we typically utilize larger disks for
-      # any real data in our infrastructure :P
-      - type: disk
-        match:
-          size: smallest
-        id: rootdisk
-        ptable: gpt
-        wipe: superblock
-        preserve: false
-
+{% block primarypartition %}
       # Add a partition for EFI
       - type: partition
         id: boot-efi-partition
@@ -26,10 +16,4 @@
         id: boot-efi-mount
         device: boot-efi-format
         path: /boot/efi
-
-      # Add a partition for /Boot
-      - type: partition
-        id: boot-partition
-        device: rootdisk
-        size: 2G
-{% endblock primarypartitions %}
+{% endblock primarypartition %}

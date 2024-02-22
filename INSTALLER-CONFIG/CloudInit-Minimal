@@ -42,7 +42,6 @@ autoinstall:
   {%- block storage %}
   storage:
     config:
-      {%- block primarypartitions %}
       # Install on the smallest disk; as we typically utilize larger disks for
       # any real data in our infrastructure :P
       - type: disk
@@ -51,7 +50,6 @@ autoinstall:
         id: rootdisk
         ptable: gpt
         wipe: superblock
-        preserve: false
         grub_device: true
 
       # Add a partition for GRUB
@@ -64,13 +62,13 @@ autoinstall:
         wipe: superblock
         preserve: false
 
+      {%- block primarypartition %}
+      {%- endblock primarypartition %}
       # Add a partition for /Boot
       - type: partition
         id: boot-partition
         device: rootdisk
         size: 2G
-      {%- endblock primarypartitions %}
-
       - type: format
         id: boot-format
         volume: boot-partition
