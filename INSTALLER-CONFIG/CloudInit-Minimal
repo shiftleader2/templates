@@ -8,13 +8,13 @@ autoinstall:
   user-data:
     disable_root: false
     hostname: {{ server.hostname }}
+    {% block users %}
     users:
-    {% block rootuser %}
       - name: root
         lock_passwd: false
         hashed_passwd: {{ server.password.sha512 }} 
         shell: /bin/bash
-    {% endblock rootuser %}
+    {% endblock users %}
     {%- block puppet %}
     puppet:
       install: true
