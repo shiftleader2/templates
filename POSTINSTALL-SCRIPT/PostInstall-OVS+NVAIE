@@ -1,0 +1,7 @@
+{% extends 'PostInstall-Generic' %}
+
+{% block extra %}
+{% include 'ovs-bootstrap.sh' %}
+{% include 'sensu-ninjainstall.sh' %}
+{% include 'install-nvaie.sh' %}
+{% endblock %}
