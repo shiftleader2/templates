@@ -4,7 +4,7 @@
 interface=$(ip -4 address | grep BROADCAST | awk '{ print $2 }' | cut -f 1 -d ':')
 ipv4=$(ip -4 address show dev ${interface} | grep inet | awk '{ print $2 }' | cut -f 1 -d '/')
 mask4=$(ip -4 address show dev ${interface} | grep inet | awk '{ print $2 }' | cut -f 2 -d '/')
-gw4=$(ip -4 route | grep default | grep ${interface} | awk '{print $3}')
+gw4=$(ip -4 route | grep default | grep ${interface} | head -n 1 | awk '{print $3}')
 mac=$(ip -4 link show dev ${interface} | grep ether | awk '{ print $2 }')
 
 echo "Installing openvswitch" >> $logfile
