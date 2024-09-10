@@ -2,6 +2,5 @@
 
 {% block extra %}
 {% include 'ovs-bootstrap.sh' %}
-{% include 'sensu-ninjainstall.sh' %}
 {% include 'install-grid.sh' %}
 {% endblock %}
