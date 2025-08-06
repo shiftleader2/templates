@@ -3,10 +3,16 @@ set -e
 
 function upload_file {
   file=$(basename $2)
+  filedata=$(echo $existing | jq ".[] | select(.name==\"${file}\")")
 
-  if [[ $existing =~ $file ]]; then
-    echo Updating the $1 file $file
-    sl2 configfile set --content $2 $file
+  if [[ $(echo $filedata | wc -c) -gt 10 ]]; then
+    shasum=$(echo $filedata | jq -r '.sha256')
+    if [[ $shasum == $(sha256sum $2 | awk '{ print $1 }') ]]; then
+      echo No changes detected in the $1 $file. Skipping.
+    else
+      echo Updating the $1 file $file
+      sl2 configfile set --content $2 $file
+    fi
   else
     echo Creating the $1 file $file
     sl2 configfile create $file "" $group $1 $2
@@ -25,7 +31,7 @@ if ! sl2 resourcegroup show $1 &> /dev/null; then
   exit 1
 fi
 
-existing=$(sl2 configfile list | tail -n +4 | head -n -1 | awk '{ print $4 }')
+existing=$(sl2 configfile list --format json )
 
 for file in $(find TFTP-CONFIG -type f); do
   upload_file TFTP-CONFIG $file
