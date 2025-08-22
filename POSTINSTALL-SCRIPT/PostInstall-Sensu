@@ -1,5 +1,0 @@
-{% extends 'PostInstall-Generic' %}
-
-{% block extra %}
-{% include 'sensu-ninjainstall.sh' %}
-{% endblock %}
