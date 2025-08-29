@@ -54,6 +54,7 @@ network:
 
 chmod 0640 /etc/netplan/01-netcfg.yaml
 chown root:root /etc/netplan/01-netcfg.yaml
-rm /etc/netplan/00-installer-config.yaml
+rm /etc/netplan/00-installer-config.yaml # Jammy install
+rm /etc/netplan/50-cloud-init.yaml       # Noble install
 
 echo "Done with the networking-configuration" >> $logfile
