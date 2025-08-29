@@ -2,4 +2,4 @@ DEFAULT install
 LABEL install
   KERNEL {{ server.os.shortname }}/{{ server.os.kernel }} 
   INITRD {{ server.os.shortname }}/{{ server.os.initrd }}
-  APPEND ip=dhcp root=/dev/ram0 ramdisk_size=4G cloud-config-url={{ api }}{{ server.config.installconf }} url=http://rpm.iik.ntnu.no/noble/ubuntu-24.04.2-live-server-amd64.iso autoinstall ds="nocloud-net;s={{ api }}/server/{{ server.id }}/installer/" ---
+  APPEND ip=dhcp root=/dev/ram0 ramdisk_size=4G cloud-config-url={{ api }}{{ server.config.installconf }} url=https://rpm.iik.ntnu.no/noble/ubuntu-24.04.2-live-server-amd64.iso autoinstall ds="nocloud-net;s={{ api }}/server/{{ server.id }}/installer/" ---
