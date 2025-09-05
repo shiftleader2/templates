@@ -11,6 +11,8 @@ function upload_file {
       echo No changes detected in the $1 $file. Skipping.
     else
       echo Updating the $1 file $file
+      echo "The diff is:"
+      diff <(sl2 configfile download ${file}) $2 || true
       sl2 configfile set --content $2 $file
     fi
   else
