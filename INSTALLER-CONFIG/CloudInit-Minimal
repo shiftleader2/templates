@@ -1,6 +1,27 @@
 #cloud-config
 autoinstall:
   version: 1
+  apt:
+    preserve_sources_list: false
+    primary:
+     - arches: [ default ]
+       uri: http://no.archive.ubuntu.com/ubuntu
+    security:
+     - arches: [ default ]
+       uri: http://no.archive.ubuntu.com/ubuntu
+    sources_list: |
+      # Vanlige pakker
+      deb $PRIMARY $RELEASE main restricted universe multiverse
+      deb-src $PRIMARY $RELEASE main restricted universe multiverse
+
+      ## Major bug fix updates produced after the final release of the
+      ## distribution.
+      deb $PRIMARY $RELEASE-updates main restricted universe multiverse
+      deb-src $PRIMARY $RELEASE-updates main restricted universe multiverse
+
+      ## Sikkerhetsfikser
+      deb $SECURITY $RELEASE-security main restricted universe multiverse
+      deb-src $SECURITY $RELEASE-security main restricted universe multiverse
   late-commands:
    - curtin in-target --target=/target -- wget "{{ api }}{{server.config.postinstall}}"
    - curtin in-target --target=/target -- chmod +x ./postinstall
