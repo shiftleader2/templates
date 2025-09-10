@@ -1,0 +1,51 @@
+{% extends 'CloudInit-Minimal' %}
+
+{% block primarypartition %}
+      # Add a partition for EFI
+      - type: partition
+        id: boot-efi-partition
+        device: rootdisk
+        size: 512M
+        grub_device: true
+        flag: boot
+      - type: format
+        id: boot-efi-format
+        volume: boot-efi-partition
+        fstype: fat32
+      - type: mount
+        id: boot-efi-mount
+        device: boot-efi-format
+        path: /boot/efi
+{% endblock primarypartition %}    
+
+{%- block openvswitchconfig %}
+    packages:
+      - openvswitch-switch
+    write_files:
+      - path: /opt/vswitchsetup.sh
+        owner: root:root
+        permissions: 0o700
+        content: |
+          #!/bin/bash
+          /usr/bin/ovs-vsctl add-br infra
+          /usr/bin/ovs-vsctl add-port infra {{ server.primary_interface.name }}
+          /usr/bin/ovs-vsctl set interface infra type=internal
+      - path: /etc/netplan/01-netcfg.yaml
+        owner: root:root
+        permissions: 0o600
+        content: |
+          network:
+            version: 2
+            renderer: networkd
+            ethernets:
+              {{ server.primary_interface.name }}: {}
+              infra:
+                dhcp4: true
+                dhcp6: false
+                accept-ra: true
+    runcmd:
+      - [sh, -c, rm /etc/netplan/50-cloud-init.yaml]
+      - [sh, -c, /opt/vswitchsetup.sh]
+      - [sh, -c, rm /opt/vswitchsetup.sh]
+      - [sh, -c, netplan apply]
+{%- endblock openvswitchconfig %}

@@ -1,58 +1,24 @@
 #cloud-config
 autoinstall:
   version: 1
+  refresh-installer: 
+    update: true
   apt:
     preserve_sources_list: false
-    primary:
-     - arches: [ default ]
-       uri: http://no.archive.ubuntu.com/ubuntu
-    security:
-     - arches: [ default ]
-       uri: http://no.archive.ubuntu.com/ubuntu
-    sources_list: |
-      # Vanlige pakker
-      deb $PRIMARY $RELEASE main restricted universe multiverse
-      deb-src $PRIMARY $RELEASE main restricted universe multiverse
-
-      ## Major bug fix updates produced after the final release of the
-      ## distribution.
-      deb $PRIMARY $RELEASE-updates main restricted universe multiverse
-      deb-src $PRIMARY $RELEASE-updates main restricted universe multiverse
-
-      ## Sikkerhetsfikser
-      deb $SECURITY $RELEASE-security main restricted universe multiverse
-      deb-src $SECURITY $RELEASE-security main restricted universe multiverse
-  late-commands:
-   - curtin in-target --target=/target -- wget "{{ api }}{{server.config.postinstall}}"
-   - curtin in-target --target=/target -- chmod +x ./postinstall
-   - curtin in-target --target=/target -- chroot ./ ./postinstall
-  user-data:
-    disable_root: false
-    hostname: {{ server.hostname }}
-    {% block users %}
-    users:
-      - name: root
-        lock_passwd: false
-        hashed_passwd: {{ server.password.sha512 }} 
-        shell: /bin/bash
-    {% endblock users %}
-    {%- block puppet %}
-    puppet:
-      install: true
-      install_type: "aio"
-      cleanup: false
-      collection: "puppet7"
-      conf:
-        agent:
-          server: {{ server.puppetserver  }} 
-          ca_server: {{ server.puppetcaserver }} 
-    {%- endblock puppet %}
+    mirror-selection:
+      primary:
+#        - country-mirror
+        - uri: http://no.archive.ubuntu.com/ubuntu
+        - uri: http://archive.ubuntu.com/ubuntu
+    geoip: false
+    fallback: abort
+  updates: all
   network:
     version: 2
     renderer: networkd
     ethernets:
     {%- for interface in server.interfaces %}
-     {%- if 'rac' not in interface %}
+      {%- if 'rac' not in interface %}
       {{ interface }}:
        {%- if server.interfaces[interface].primary %}
         dhcp4: true
@@ -62,7 +28,8 @@ autoinstall:
        {%- endif %}
      {%- endif %}
     {%- endfor %}
-  {%- block storage %}
+
+{%- block storage %}
   storage:
     config:
       # Install on the smallest disk; as we typically utilize larger disks for
@@ -184,3 +151,34 @@ autoinstall:
         path: none
       {%- endblock swap %}
   {%- endblock storage %}
+  late-commands:
+   - curtin in-target --target=/target -- wget "{{ api }}{{server.config.postinstall}}"
+   - curtin in-target --target=/target -- chmod +x ./postinstall
+   - curtin in-target --target=/target -- chroot ./ ./postinstall
+
+  user-data:
+{%- block ciuserdata %}
+    disable_root: false
+    hostname: {{ server.hostname }}
+    {%- block users %}
+    users:
+      - name: root
+        lock_passwd: false
+        hashed_passwd: {{ server.password.sha512 }} 
+        shell: /bin/bash
+    {%- endblock users %}
+    {%- block puppet %}
+    puppet:
+      install: true
+      install_type: "aio"
+      cleanup: false
+      collection: "puppet7"
+      conf:
+        agent:
+          server: {{ server.puppetserver  }} 
+          ca_server: {{ server.puppetcaserver }} 
+    {%- endblock puppet %}
+
+    {%- block openvswitchconfig %}
+    {%- endblock openvswitchconfig %}
+{%- endblock ciuserdata %}
