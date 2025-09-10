@@ -1,0 +1,5 @@
+{% extends 'PostInstall-Generic' %}
+
+{% block extra %}
+{% include 'enable-iommu.sh' %}
+{% endblock %}
