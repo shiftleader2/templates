@@ -1,0 +1,5 @@
+{% extends 'PostInstall-Generic' %}
+
+{% block extra %}
+{% include 'install-grid.sh' %}
+{% endblock %}
