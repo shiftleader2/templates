@@ -16,6 +16,6 @@ echo options nouveau modeset=0 >> /etc/modprobe.d/blacklist-nvidia-nouveau.conf
 update-grub
 update-initramfs -u
 
-wget http://rpm.iik.ntnu.no/nvidia/nvidia-aie-ubuntu.deb -O /tmp/nvidia-aie.deb
+wget https://rpm.iik.ntnu.no/nvidia/nvidia-aie-ubuntu.deb -O /tmp/nvidia-aie.deb
 apt -y install /tmp/nvidia-aie.deb
 rm /tmp/nvidia-aie.deb

@@ -16,6 +16,6 @@ echo options nouveau modeset=0 >> /etc/modprobe.d/blacklist-nvidia-nouveau.conf
 update-grub
 update-initramfs -u
 
-wget http://rpm.iik.ntnu.no/nvidia/nvidia-vgpu-ubuntu.deb -O /tmp/nvidia-grid.deb
+wget https://rpm.iik.ntnu.no/nvidia/nvidia-vgpu-ubuntu.deb -O /tmp/nvidia-grid.deb
 apt -y install /tmp/nvidia-grid.deb
 rm /tmp/nvidia-grid.deb
